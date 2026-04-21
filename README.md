@@ -19,6 +19,10 @@ Put `konmai.dll` in  `C:\Program Files\7-Zip\Formats`
 
 - .s3p
 
+- .cab/arcfile
+
+- .d2
+
 ## Disclaimer
 
 Entirely vibe coded. Use at your own risk.

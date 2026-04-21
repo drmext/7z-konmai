@@ -43,6 +43,8 @@ set(Z7_ARCHIVE
   "${Z7}/CPP/7zip/Archive/IfsHandler.cpp"
   "${Z7}/CPP/7zip/Archive/TwoDxHandler.cpp"
   "${Z7}/CPP/7zip/Archive/S3pHandler.cpp"
+  "${Z7}/CPP/7zip/Archive/ArcfileHandler.cpp"
+  "${Z7}/CPP/7zip/Archive/D2Handler.cpp"
 )
 
 add_library(FormatBar SHARED
