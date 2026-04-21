@@ -15,6 +15,10 @@ Put `konmai.dll` in  `C:\Program Files\7-Zip\Formats`
 
 - .ifs (textures aren't converted to png)
 
+- .2dx
+
+- .s3p
+
 ## Disclaimer
 
 Entirely vibe coded. Use at your own risk.
