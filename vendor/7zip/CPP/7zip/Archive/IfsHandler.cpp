@@ -525,7 +525,10 @@ static HRESULT ApplyIfsTexMetadata(IInStream *stream, CObjectVector<CItem> &item
           continue;
         if (MyStringCompareNoCase(stem, entries[k].ImageName) != 0)
           continue;
-        if (!entries[k].Format.IsEqualTo_NoCase(L"argb8888rev"))
+        const UString &fmt = entries[k].Format;
+        if (!fmt.IsEqualTo_NoCase(L"argb8888rev")
+            && !fmt.IsEqualTo_NoCase(L"dxt5")
+            && !fmt.IsEqualTo_NoCase(L"bc3"))
           continue;
 
         it.TexPng = true;
