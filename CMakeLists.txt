@@ -56,10 +56,13 @@ add_library(FormatBar SHARED
   "${Z7}/C/Alloc.c"
   "${Z7}/C/7zCrc.c"
   "${Z7}/C/7zCrcOpt.c"
+  "${Z7}/C/Md5.c"
   "${Z7}/CPP/Common/CRC.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/vendor/arc/DdrLz77.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/vendor/kbinxml/KbinXmlDecode.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/vendor/kbinxml/KbinXmlSerialize.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/vendor/lodepng/lodepng.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/vendor/ifs_tex/IfsTexToPng.cpp"
 )
 
 target_include_directories(FormatBar PRIVATE
@@ -67,6 +70,8 @@ target_include_directories(FormatBar PRIVATE
   "${Z7}/C"
   "${CMAKE_CURRENT_SOURCE_DIR}/vendor/arc"
   "${CMAKE_CURRENT_SOURCE_DIR}/vendor/kbinxml"
+  "${CMAKE_CURRENT_SOURCE_DIR}/vendor/lodepng"
+  "${CMAKE_CURRENT_SOURCE_DIR}/vendor/ifs_tex"
 )
 
 target_compile_definitions(FormatBar PRIVATE

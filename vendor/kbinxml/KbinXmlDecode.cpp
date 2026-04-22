@@ -477,10 +477,13 @@ static void FormatIp(UInt32 be, UString &text)
 }
 
 static bool BuildNodeText(unsigned nodeType, const FmtInfo &fi, CBuf &dataBuf,
-    CBuf &dataByteBuf, CBuf &dataWordBuf, Byte encKey, bool isArrayFlag, UString &text, UString &typeAttr)
+    CBuf &dataByteBuf, CBuf &dataWordBuf, Byte encKey, bool isArrayFlag, UString &text, UString &typeAttr,
+    int *typeArrayScalarCountOut)
 {
   CByteBuffer raw;
   typeAttr = fi.typeName;
+  if (typeArrayScalarCountOut)
+    *typeArrayScalarCountOut = -1;
 
   if (fi.count < 0)
   {
@@ -538,6 +541,8 @@ static bool BuildNodeText(unsigned nodeType, const FmtInfo &fi, CBuf &dataBuf,
   }
 
   FormatIntsToText(raw, fi.typeChar, totalCount, text);
+  if (typeArrayScalarCountOut && isArrayFlag && fi.count > 0)
+    *typeArrayScalarCountOut = totalCount;
   for (;;)
   {
     if (text.IsEmpty()) break;
@@ -658,13 +663,16 @@ bool KbinXmlDecodeFromBinary(const Byte *data, size_t size, CKbinXmlNode *&rootO
       continue;
 
     UString typeAttr, text;
-    if (!BuildNodeText(nodeType, fi, dataBuf, dataByteBuf, dataWordBuf, encKey, isArray, text, typeAttr))
+    int typeArrayScalarCount = -1;
+    if (!BuildNodeText(nodeType, fi, dataBuf, dataByteBuf, dataWordBuf, encKey, isArray, text, typeAttr,
+            &typeArrayScalarCount))
     {
       delete wrapper;
       return false;
     }
     child->TypeAttr = typeAttr;
     child->Text = text;
+    child->TypeValueCount = typeArrayScalarCount;
   }
 
   if (wrapper->Children.Size() != 1)

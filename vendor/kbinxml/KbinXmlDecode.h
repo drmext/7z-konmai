@@ -10,6 +10,7 @@ struct CKbinXmlNode
   UString Tag;
   UString Text;
   UString TypeAttr; // __type when present
+  int TypeValueCount; // typed array: scalar count for __count; -1 = omit
   struct CAttr
   {
     UString Key;
@@ -18,7 +19,7 @@ struct CKbinXmlNode
   CObjectVector<CAttr> Attrs;
   CRecordVector<CKbinXmlNode *> Children;
 
-  CKbinXmlNode(): Children() {}
+  CKbinXmlNode(): Children(), TypeValueCount(-1) {}
   ~CKbinXmlNode();
 private:
   CKbinXmlNode(const CKbinXmlNode &);

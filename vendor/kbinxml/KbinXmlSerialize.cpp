@@ -2,6 +2,7 @@
 
 #include <string.h>
 
+#include "../7zip/CPP/Common/IntToString.h"
 #include "../7zip/CPP/Common/UTFConvert.h"
 
 bool KbinXmlIsBinaryXml(const Byte *data, size_t size)
@@ -83,6 +84,15 @@ static void SerializeNode(const CKbinXmlNode *n, unsigned depth, AString &out)
   {
     out += " __type=\"";
     AppendEscapedXmlAttr(n->TypeAttr, out);
+    out += "\"";
+  }
+  if (n->TypeValueCount >= 0 && !n->TypeAttr.IsEmpty())
+  {
+    wchar_t wbuf[32];
+    ConvertInt64ToString((Int64)n->TypeValueCount, wbuf);
+    const UString countStr(wbuf);
+    out += " __count=\"";
+    AppendEscapedXmlAttr(countStr, out);
     out += "\"";
   }
 

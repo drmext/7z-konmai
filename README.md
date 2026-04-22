@@ -1,10 +1,11 @@
 # 7z-konmai
 
 ## Install
+
 Put `konmai.dll` in  `C:\Program Files\7-Zip\Formats`
 
-
 ## Supported Formats (extract only)
+
 - .bar
 
 - .qar
@@ -13,7 +14,7 @@ Put `konmai.dll` in  `C:\Program Files\7-Zip\Formats`
 
 - .arc
 
-- .ifs (textures aren't converted to png)
+- .ifs
 
 - .2dx
 
