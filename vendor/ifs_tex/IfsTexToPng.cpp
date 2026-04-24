@@ -202,6 +202,68 @@ static bool Bc3BlocksToRgba(const Byte *blocks, size_t blockBytes, UInt32 width,
   return true;
 }
 
+static bool Bc1BlocksToRgba(const Byte *blocks, size_t blockBytes, UInt32 width, UInt32 height,
+    CByteBuffer &rgbaOut)
+{
+  const UInt32 blocksX = (width + 3u) / 4u;
+  const UInt32 blocksY = (height + 3u) / 4u;
+  const size_t needBlocks = (size_t)blocksX * (size_t)blocksY * 8u;
+  if (blockBytes < needBlocks)
+    return false;
+
+  const size_t npix = (size_t)width * (size_t)height;
+  rgbaOut.Alloc(npix * 4);
+  memset(rgbaOut, 0, npix * 4);
+
+  for (UInt32 by = 0; by < blocksY; by++)
+  {
+    for (UInt32 bx = 0; bx < blocksX; bx++)
+    {
+      const Byte *src = blocks + ((size_t)by * blocksX + bx) * 8;
+      Byte cell[64];
+      DecompressColourBlockDxt(src, true, cell);
+      for (UInt32 py = 0; py < 4; py++)
+      {
+        for (UInt32 px = 0; px < 4; px++)
+        {
+          const UInt32 ix = bx * 4u + px;
+          const UInt32 iy = by * 4u + py;
+          if (ix >= width || iy >= height)
+            continue;
+          const int di = (int)(py * 4u + px);
+          memcpy(rgbaOut + ((size_t)iy * width + ix) * 4, cell + di * 4, 4);
+        }
+      }
+    }
+  }
+  return true;
+}
+
+static void Bgra4444ToRgba8888(const Byte *bgra4444, size_t numPixels, Byte *rgbaOut)
+{
+  for (size_t i = 0; i < numPixels; i++)
+  {
+    const Byte b0 = bgra4444[i * 2 + 0];
+    const Byte b1 = bgra4444[i * 2 + 1];
+
+    // ifstools uses PIL 'RGBA;4B' then swaps R/B → treat input as BGRA4444.
+    Byte r4 = (Byte)(b0 >> 4);
+    Byte g4 = (Byte)(b0 & 0xF);
+    Byte b4 = (Byte)(b1 >> 4);
+    Byte a4 = (Byte)(b1 & 0xF);
+
+    // swap R/B
+    const Byte t = r4;
+    r4 = b4;
+    b4 = t;
+
+    rgbaOut[i * 4 + 0] = (Byte)((r4 << 4) | r4);
+    rgbaOut[i * 4 + 1] = (Byte)((g4 << 4) | g4);
+    rgbaOut[i * 4 + 2] = (Byte)((b4 << 4) | b4);
+    rgbaOut[i * 4 + 3] = (Byte)((a4 << 4) | a4);
+  }
+}
+
 bool IfsTexRawToPngBuffer(const Byte *raw, size_t rawSize, bool avslz,
     const UString &format, UInt32 width, UInt32 height, CByteBuffer &pngOut)
 {
@@ -211,7 +273,9 @@ bool IfsTexRawToPngBuffer(const Byte *raw, size_t rawSize, bool avslz,
 
   const bool isArgb = format.IsEqualTo_NoCase(L"argb8888rev");
   const bool isBc3 = format.IsEqualTo_NoCase(L"dxt5") || format.IsEqualTo_NoCase(L"bc3");
-  if (!isArgb && !isBc3)
+  const bool isBc1 = format.IsEqualTo_NoCase(L"dxt1") || format.IsEqualTo_NoCase(L"bc1");
+  const bool isArgb4444 = format.IsEqualTo_NoCase(L"argb4444");
+  if (!isArgb && !isArgb4444 && !isBc1 && !isBc3)
     return false;
 
   CByteBuffer pix;
@@ -243,7 +307,23 @@ bool IfsTexRawToPngBuffer(const Byte *raw, size_t rawSize, bool avslz,
     rgba.Alloc(rgbaBytes);
     BgraToRgba(pix, npix, rgba);
   }
-  else
+  else if (isArgb4444)
+  {
+    const size_t need = npix * 2;
+    if (pix.Size() < need || pix.Size() > need)
+    {
+      CByteBuffer adj;
+      adj.Alloc(need);
+      memset(adj, 0, need);
+      memcpy(adj, pix, pix.Size() < need ? pix.Size() : need);
+      pix.Free();
+      pix.Alloc(need);
+      memcpy(pix, adj, need);
+    }
+    rgba.Alloc(rgbaBytes);
+    Bgra4444ToRgba8888(pix, npix, rgba);
+  }
+  else if (isBc3)
   {
     SwapBe16WordsToLeInPlace(pix, pix.Size());
     const UInt32 blocksX = (width + 3u) / 4u;
@@ -260,6 +340,25 @@ bool IfsTexRawToPngBuffer(const Byte *raw, size_t rawSize, bool avslz,
       memcpy(pix, adj, needBlocks);
     }
     if (!Bc3BlocksToRgba(pix, pix.Size(), width, height, rgba))
+      return false;
+  }
+  else
+  {
+    SwapBe16WordsToLeInPlace(pix, pix.Size());
+    const UInt32 blocksX = (width + 3u) / 4u;
+    const UInt32 blocksY = (height + 3u) / 4u;
+    const size_t needBlocks = (size_t)blocksX * (size_t)blocksY * 8u;
+    if (pix.Size() < needBlocks)
+    {
+      CByteBuffer adj;
+      adj.Alloc(needBlocks);
+      memset(adj, 0, needBlocks);
+      memcpy(adj, pix, pix.Size());
+      pix.Free();
+      pix.Alloc(needBlocks);
+      memcpy(pix, adj, needBlocks);
+    }
+    if (!Bc1BlocksToRgba(pix, pix.Size(), width, height, rgba))
       return false;
   }
 

@@ -527,6 +527,9 @@ static HRESULT ApplyIfsTexMetadata(IInStream *stream, CObjectVector<CItem> &item
           continue;
         const UString &fmt = entries[k].Format;
         if (!fmt.IsEqualTo_NoCase(L"argb8888rev")
+            && !fmt.IsEqualTo_NoCase(L"argb4444")
+            && !fmt.IsEqualTo_NoCase(L"dxt1")
+            && !fmt.IsEqualTo_NoCase(L"bc1")
             && !fmt.IsEqualTo_NoCase(L"dxt5")
             && !fmt.IsEqualTo_NoCase(L"bc3"))
           continue;
